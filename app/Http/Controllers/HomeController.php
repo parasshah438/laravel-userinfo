@@ -12,14 +12,23 @@ class HomeController extends Controller
     {
         $userInfo = UserInfoHelper::trackUserInfo($request);
 
-        $existingRecord = UserInfo::where('ip_address', $userInfo['ip_address'])
-        ->whereBetween('current_date_time', [
-            now()->subMinute(), // Allow duplicates only if the record is older than 1 minute
-            now()
-        ])->first();
+        //Check for existing record
+        $existingRecord = UserInfo::where('ip_address', $userInfo['ip_address'])->first();
 
-        //store
-        if (!$existingRecord) {
+        if ($existingRecord) {
+            //Update
+            $existingRecord->update([
+                'browser_name' => $userInfo['browser_name'],
+                'browser_version' => $userInfo['browser_version'],
+                'device_type' => $userInfo['device_type'],
+                'current_date_time' => $userInfo['current_date_time'],
+                'country' => $userInfo['country'],
+                'city' => $userInfo['city'],
+                'latitude' => $userInfo['latitude'],
+                'longitude' => $userInfo['longitude'],
+            ]);
+        } else {
+            //Store
             UserInfo::create([
                 'ip_address' => $userInfo['ip_address'],
                 'browser_name' => $userInfo['browser_name'],
@@ -32,8 +41,7 @@ class HomeController extends Controller
                 'longitude' => $userInfo['longitude'],
             ]);
         }
-    
+
         return response()->json($userInfo);
     }
-
 }
